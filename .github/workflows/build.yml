@@ -1,0 +1,64 @@
+name: Build GoClaw Android arm64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android arm64
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install
+
+      - name: Build web dist
+        working-directory: web
+        run: npm run build
+
+      - name: Verify web dist
+        working-directory: web
+        run: ls -la dist/ && ls dist/index.html
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Install Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          local-cache: true
+
+      - name: Verify NDK
+        run: |
+          echo $ANDROID_NDK_HOME
+          ls $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/ | head -5
+          $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang --version | head -1
+
+      - name: Build Android arm64
+        run: |
+          export CC="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang"
+          export GOOS=android
+          export GOARCH=arm64
+          export CGO_ENABLED=1
+          go mod download && go build -ldflags="-s -w" -o goclaw-android-arm64 .
+
+      - name: Verify binary
+        run: file goclaw-android-arm64 && ls -lh goclaw-android-arm64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goclaw-android-arm64
+          path: goclaw-android-arm64
+          retention-days: 7
