@@ -1,4 +1,4 @@
-name: Build GoClaw Android arm64
+name: Build GoClaw windows amd64
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ jobs:
         run: |
           export GOOS=windows
           export GOARCH=amd64
-          export CGO_ENABLED=1
+          export CGO_ENABLED=0
           go mod download && go build -ldflags="-s -w" -o goclaw-windows-amd64 .
 
       - uses: actions/upload-artifact@v4
