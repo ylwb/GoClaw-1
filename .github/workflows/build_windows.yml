@@ -1,0 +1,48 @@
+name: Build GoClaw Android arm64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build windows amd64
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm install
+
+      - name: Build web dist
+        working-directory: web
+        run: npm run build
+
+      - name: Verify web dist
+        working-directory: web
+        run: ls -la dist/ && ls dist/index.html
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Build win amd64
+        run: |
+          export GOOS=windows
+          export GOARCH=amd64
+          export CGO_ENABLED=1
+          go mod download && go build -ldflags="-s -w" -o goclaw-windows-amd64 .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goclaw-windows-amd64
+          path: goclaw-windows-amd64
+          retention-days: 7
