@@ -388,7 +388,7 @@ func (a *Agent) ProcessMessage(ctx context.Context, message string) (*types.Chat
 				
 				if isRepeated {
 					log.Printf("Detected repeated tool calls, breaking loop to prevent infinite loop")
-					break
+					// break
 				}
 			}
 			previousToolCalls = currentToolCalls
